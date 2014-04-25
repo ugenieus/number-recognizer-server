@@ -30,9 +30,12 @@ def home(name):
         saveNumber(number, numberString)
     elif name == 'classify':
         if request.method == 'POST':
-            numberString = request.form('result')
+            numberString = request.form['result']
         else:
             numberString = request.args.get('result', '')
+
+        print numberString
+
         return classify(numberString)
 
     return jsonify(result=True)
@@ -87,6 +90,7 @@ def classify(numberString):
     trainingFileList = listdir(TRAINING_SET_PATH)           #load the training set
     m = len(trainingFileList)
     trainingMat = zeros((m,width * width))
+
     for i in range(m):
         fileNameStr = trainingFileList[i]
         fileStr = fileNameStr.split('.')[0]     #take off .txt

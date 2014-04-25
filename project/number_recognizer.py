@@ -75,6 +75,9 @@ def saveNumber(number, numberString):
         if classNumStr == int(number):
             count += 1
 
+    if(count >= 40):
+        return
+
     f = open(TRAINING_SET_PATH + '/' + number + '_' + str(count) + '.txt','w')
 
     for i in range(len(stringVector)):

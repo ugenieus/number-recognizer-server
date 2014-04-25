@@ -3,7 +3,10 @@ from flask import Flask
 from flask import request
 from os import listdir
 from numpy import *
+from flask import jsonify
 import operator
+
+TRAINING_SET_PATH = '/var/www/nr-api/trainingSet'
 
 app = Flask(__name__)
 
@@ -25,15 +28,14 @@ def home(name):
             number = request.args.get('number', -1)
             numberString = request.args.get('result', '')
         saveNumber(number, numberString)
-
     elif name == 'classify':
         if request.method == 'POST':
             numberString = request.form('result')
         else:
             numberString = request.args.get('result', '')
-        classify(numberString)
+        return classify(numberString)
 
-    return 'hello'
+    return jsonify(result=True)
 
 def stringToArray(string):
     stringSize = len(string)
@@ -45,7 +47,7 @@ def stringToArray(string):
     stringArray = []
     for i in range(width):
         stringArray.append(string[i*width:(i+1)*width])
-    return width, stringArray;
+    return width, stringArray
 
 def stringToVector(width, stringArray):
     returnVect = zeros((1,width * width))
@@ -57,7 +59,7 @@ def stringToVector(width, stringArray):
 
 def saveNumber(number, numberString):
     count = 0
-    trainingFileList = listdir('trainingSet')          
+    trainingFileList = listdir(TRAINING_SET_PATH)
     m = len(trainingFileList)
 
     width, stringVector = stringToArray(numberString)
@@ -70,7 +72,7 @@ def saveNumber(number, numberString):
         if classNumStr == int(number):
             count += 1
 
-    f = open('trainingSet/' + number + '_' + str(count) + '.txt','w')
+    f = open(TRAINING_SET_PATH + '/' + number + '_' + str(count) + '.txt','w')
 
     for i in range(len(stringVector)):
         f.write(stringVector[i]+'\n')
@@ -82,7 +84,7 @@ def classify(numberString):
     width, stringVector = stringToVector(width, stringArray)
 
     hwLabels = []
-    trainingFileList = listdir('trainingSet')           #load the training set
+    trainingFileList = listdir(TRAINING_SET_PATH)           #load the training set
     m = len(trainingFileList)
     trainingMat = zeros((m,width * width))
     for i in range(m):
@@ -90,12 +92,16 @@ def classify(numberString):
         fileStr = fileNameStr.split('.')[0]     #take off .txt
         classNumStr = int(fileStr.split('_')[0])
         hwLabels.append(classNumStr)
-        trainingMat[i,:] = img2vector('trainingSet/%s' % fileNameStr, width)
+        trainingMat[i,:] = img2vector(TRAINING_SET_PATH + '/' + fileNameStr, width)
 
     classifierResult = classify0(stringVector, trainingMat, hwLabels, 3)
+    resultDic = {}
 
-    for i in len(classifierResult):
+    for i in range(len(classifierResult)):
         print classifierResult[i][0]
+        resultDic[str(i)] = classifierResult[i][0]
+
+    return jsonify(reuslt=resultDic)
 
 def classify0(inX, dataSet, labels, k):
     dataSetSize = dataSet.shape[0]
@@ -124,7 +130,7 @@ def file2matrix(filename):
         returnMat[index,:] = listFromLine[0:3]
         classLabelVector.append(int(listFromLine[-1]))
         index += 1
-    return returnMat,classLabelVector
+    return returnMat, classLabelVector
 
 def autoNorm(dataSet):
     minVals = dataSet.min(0)

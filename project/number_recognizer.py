@@ -108,7 +108,7 @@ def classify(numberString):
         print classifierResult[i][0]
         resultDic[str(i)] = classifierResult[i][0]
 
-    return jsonify(reuslt=resultDic)
+    return jsonify(result=resultDic)
 
 def classify0(inX, dataSet, labels, k):
     dataSetSize = dataSet.shape[0]
